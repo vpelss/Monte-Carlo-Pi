@@ -978,7 +978,13 @@ https://en.wikipedia.org/wiki/Monte_Carlo_method
       }
     };
   })();
-  var grid = (function() { //set up points (no zero values) let x=0; let y=1; let divisions; return function(division) { //initialization if (division !=null) { divisions=division; x=0; y=1; return "initialized" ; } //the deed x++; if (x>= divisions) {
+  var grid = (function() { //set up points (no zero values) 
+    
+    let x=0; let y=1; let divisions; return function(division) { //initialization 
+     if (division !=null) { divisions=division; x=0; y=1; return "initialized" ; } //the deed 
+      x++; 
+      if (x>= divisions) 
+    {
     x = 1;
     y++;
     if (y >= divisions) {
@@ -1038,7 +1044,6 @@ let inline_webworker_blob = new Blob(
   [document.querySelector("#webworker").textContent],
   { type: "text/javascript" }
 );
-
 
 let webworker;
 
