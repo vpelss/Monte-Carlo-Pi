@@ -12,7 +12,8 @@
 
     <link rel="canonical" href="https://codepen.io/vpelss/pen/wBwKbKX">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+
   
   
   
@@ -894,7 +895,7 @@ https://en.wikipedia.org/wiki/Monte_Carlo_method
 
 <div id="plots"></div>
 
-<script id="webworker" _type="javascript/worker">
+<script id="webworker" type="text/js-worker">
   onmessage = function(event) {
     var input = event.data;
     Start_Worker(input);
@@ -977,36 +978,21 @@ https://en.wikipedia.org/wiki/Monte_Carlo_method
       }
     };
   })();
-  var grid = (function() {
-    //set up points (no zero values)
-    let x = 0;
-    let y = 1;
-    let divisions;
-    return function(division) {
-      //initialization
-      if (division != null) {
-        divisions = division;
-        x = 0;
-        y = 1;
-        return "initialized";
-      }
-      //the deed
-      x++;
-      if (x >= divisions) {
-        x = 1;
-        y++;
-        if (y >= divisions) {
-          x = 0;
-          y = 0;
-          return null;
-        }
-      }
-      return [x, y];
+  var grid = (function() { //set up points (no zero values) let x=0; let y=1; let divisions; return function(division) { //initialization if (division !=null) { divisions=division; x=0; y=1; return "initialized" ; } //the deed x++; if (x>= divisions) {
+    x = 1;
+    y++;
+    if (y >= divisions) {
+      x = 0;
+      y = 0;
+      return null;
     }
+  }
+  return [x, y];
+  }
   })();
 </script>
   
-      <script id="rendered-js" >
+    <script id="rendered-js" >
 //set html events
 let run_forest = document.getElementById("gogogo");
 run_forest.onclick = RunForestRun;
@@ -1053,6 +1039,7 @@ let inline_webworker_blob = new Blob(
   { type: "text/javascript" }
 );
 
+
 let webworker;
 
 function RunForestRun() {
@@ -1091,7 +1078,7 @@ function RunForestRun() {
   };
   webworker.postMessage(input);
 }
-    </script>
+  </script>
 
   
 </body>
