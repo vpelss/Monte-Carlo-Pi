@@ -894,114 +894,13 @@ https://en.wikipedia.org/wiki/Monte_Carlo_method
 <div id="message"></div>
 
 <div id="plots"></div>
-
-<script id="webworker" type="text/js-worker">
-  onmessage = function(event) {
-    var input = event.data;
-    Start_Worker(input);
-  };
-
-  function Start_Worker(input) {
-    let divisions = input.divisions;
-    let skip = input.skip;
-    let pi = {
-      "pi_guestimate": 0
-    };
-    let count = 1;
-    grid(divisions);
-    pi_monte(input);
-    while (pi.pi_guestimate >= 0) {
-      pi = pi_monte();
-      count++;
-      if ((count % skip) == 0) {
-        postMessage(pi);
-        count = 1;
-      }
-    }
-    postMessage(pi);
-  }
-  var pi_monte = (function() {
-    let radius = 100;
-    let divisions = 100;
-    let steps;
-    let circle_points = 0;
-    let square_points = 0;
-    let pi_guestimate;
-    let count = 0;
-    let random = true;
-    return function(input) {
-      //initialization
-      if (input != null) {
-        divisions = input.divisions;
-        radius = input.radius;
-        random = input.random;
-        steps = radius / divisions;
-        circle_points = 0;
-        square_points = 0;
-        count = 0;
-        return null;
-      }
-      //the deed
-      count++;
-      if ((divisions * divisions) < count) {
-        return {
-          "pi_guestimate": -pi_guestimate,
-          "point": [0, 0]
-        };
-      }
-      if (random) {
-        x = Math.random() * radius;
-        y = Math.random() * radius;
-      } else {
-        let point = grid();
-        if (point == null) {
-          return {
-            "pi_guestimate": -pi_guestimate,
-            "point": [0, 0]
-          };
-        }
-        x = point[0] * steps;
-        y = point[1] * steps;
-      }
-      let hyp = x * x + y * y;
-      let rad_pow2 = radius * radius;
-      if (hyp < rad_pow2) {
-        circle_points++;
-      }
-      square_points++;
-      pi_guestimate = 4 * (circle_points / square_points);
-      if (pi_guestimate != Infinity) {
-        return {
-          "pi_guestimate": pi_guestimate,
-          "point": [x, y]
-        };
-      }
-    };
-  })();
-  var grid = (function() { //set up points (no zero values) 
-    
-    let x=0; let y=1; let divisions; return function(division) { //initialization 
-     if (division !=null) { divisions=division; x=0; y=1; return "initialized" ; } //the deed 
-      x++; 
-      if (x>= divisions) 
-    {
-    x = 1;
-    y++;
-    if (y >= divisions) {
-      x = 0;
-      y = 0;
-      return null;
-    }
-  }
-  return [x, y];
-  }
-  })();
-</script>
   
     <script id="rendered-js" >
 //set html events
 let run_forest = document.getElementById("gogogo");
 run_forest.onclick = RunForestRun;
+
+let webworker;
 
 let radius = 100;
 
@@ -1039,14 +938,6 @@ var layout = {
 var data = [trace1];
 Plotly.newPlot("plots", data, layout);
 
-//get inline webworker code.
-let inline_webworker_blob = new Blob(
-  [document.querySelector("#webworker").textContent],
-  { type: "text/javascript" }
-);
-
-let webworker;
-
 function RunForestRun() {
   var data = [trace1];
   Plotly.newPlot("plots", data, layout);
@@ -1063,7 +954,9 @@ function RunForestRun() {
     //if it is running, shut it down. Our human master has requested a new run
     webworker.terminate();
   }
-  webworker = new Worker(window.URL.createObjectURL(inline_webworker_blob));
+  //create webworker using Blob URL
+  webworker = new Worker(webworkerurl);
+
   //messages from webworker
   webworker.onmessage = function (event) {
     let op = event.data;
@@ -1083,6 +976,129 @@ function RunForestRun() {
   };
   webworker.postMessage(input);
 }
+
+//WEB WORKER CODE
+function function_containing_webworker() {
+  onmessage = function (event) {
+    var input = event.data;
+    Start_Worker(input);
+  };
+
+  function Start_Worker(input) {
+    let divisions = input.divisions;
+    let skip = input.skip;
+    let pi = {
+      pi_guestimate: 0
+    };
+    let count = 1;
+    grid(divisions);
+    pi_monte(input);
+    while (pi.pi_guestimate >= 0) {
+      pi = pi_monte();
+      count++;
+      if (count % skip == 0) {
+        postMessage(pi);
+        count = 1;
+      }
+    }
+    postMessage(pi);
+  }
+
+  //the following functions use closures so we can keep persistant variables for each call, If we supply var input, we initialize. If we don't then we are using persistant variables.
+
+  var pi_monte = (function () {
+    let radius = 100;
+    let divisions = 100;
+    let steps;
+    let circle_points = 0;
+    let square_points = 0;
+    let pi_guestimate;
+    let count = 0;
+    let random = true;
+    return function (input) {
+      //initialization
+      if (input != null) {
+        divisions = input.divisions;
+        radius = input.radius;
+        random = input.random;
+        steps = radius / divisions;
+        circle_points = 0;
+        square_points = 0;
+        count = 0;
+        return null;
+      }
+      //the deed
+      count++;
+      if (divisions * divisions < count) {
+        return {
+          pi_guestimate: -pi_guestimate,
+          point: [0, 0]
+        };
+      }
+      if (random) {
+        x = Math.random() * radius;
+        y = Math.random() * radius;
+      } else {
+        let point = grid();
+        if (point == null) {
+          return {
+            pi_guestimate: -pi_guestimate,
+            point: [0, 0]
+          };
+        }
+        x = point[0] * steps;
+        y = point[1] * steps;
+      }
+      let hyp = x * x + y * y;
+      let rad_pow2 = radius * radius;
+      if (hyp < rad_pow2) {
+        circle_points++;
+      }
+      square_points++;
+      pi_guestimate = 4 * (circle_points / square_points);
+      if (pi_guestimate != Infinity) {
+        return {
+          pi_guestimate: pi_guestimate,
+          point: [x, y]
+        };
+      }
+    };
+  })();
+
+  var grid = (function () {
+    //set up points (no zero values)
+    let x = 0;
+    let y = 1;
+    let divisions;
+    return function (division) {
+      //initialization
+      if (division != null) {
+        divisions = division;
+        x = 0;
+        y = 1;
+        return "initialized";
+      } //the deed
+      x++;
+      if (x >= divisions) {
+        x = 1;
+        y++;
+        if (y >= divisions) {
+          x = 0;
+          y = 0;
+          return null;
+        }
+      }
+      return [x, y];
+    };
+  })();
+}
+
+function fn2workerURL(fn) {
+  const blob = new Blob([`(${fn.toString()})()`], { type: "text/javascript" });
+  return URL.createObjectURL(blob);
+}
+//create the web worker Blob and return the Blob URL
+let webworkerurl = fn2workerURL(function_containing_webworker);
   </script>
 
   
